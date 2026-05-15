@@ -1,0 +1,12 @@
+<Solution>
+  <Project Path="../../RESTful APIs/User Management/BuildingBlocks.Auditing/BuildingBlocks.Auditing.csproj" />
+  <Project Path="../../RESTful APIs/User Management/BuildingBlocks.Logging/BuildingBlocks.Logging.csproj" />
+  <Project Path="../../RESTful APIs/User Management/BuildingBlocks.Monitoring/BuildingBlocks.Monitoring.csproj" />
+  <Project Path="../../RESTful APIs/User Management/BuildingBlocks.Shared.API/BuildingBlocks.Shared.API.csproj" />
+  <Project Path="../../RESTful APIs/User Management/BuildingBlocks.Shared.Contracts/BuildingBlocks.Shared.Contracts.csproj" />
+  <Project Path="../../RESTful APIs/User Management/BuildingBlocks.Shared.Core/BuildingBlocks.Shared.Core.csproj" />
+  <Project Path="Abdulhadi.Foundation.Identity.Api/Abdulhadi.Foundation.Identity.Api.csproj" />
+  <Project Path="Abdulhadi.Foundation.Identity.Application/Abdulhadi.Foundation.Identity.Application.csproj" />
+  <Project Path="Abdulhadi.Foundation.Identity.Domain/Abdulhadi.Foundation.Identity.Domain.csproj" />
+  <Project Path="Abdulhadi.Foundation.Identity.Infrastructure/Abdulhadi.Foundation.Identity.Infrastructure.csproj" />
+</Solution>
