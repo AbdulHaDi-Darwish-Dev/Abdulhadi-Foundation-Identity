@@ -1,7 +1,8 @@
 ﻿namespace Abdulhadi.Foundation.Identity.Infrastructure.Services.Email;
 
-public sealed class ResendOptions
+public class ResendOptions
 {
-    public string FromEmail { get; set; } = null!;
-    public string BaseUrl { get; set; } = null!;
+    public string ApiKey { get; set; } = string.Empty;
+    public string FromEmail { get; set; } = string.Empty;
+    public string BaseUrl { get; set; } = string.Empty;
 }
