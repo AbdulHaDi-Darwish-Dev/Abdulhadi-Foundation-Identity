@@ -15,6 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Abdulhadi.Foundation.Identity.Application\Abdulhadi.Foundation.Identity.Application.csproj" />
     <ProjectReference Include="..\Abdulhadi.Foundation.Identity.Domain\Abdulhadi.Foundation.Identity.Domain.csproj" />
     <ProjectReference Include="..\BuildingBlocks.Auditing\BuildingBlocks.Auditing.csproj" />
     <ProjectReference Include="..\BuildingBlocks.Logging\BuildingBlocks.Logging.csproj" />
