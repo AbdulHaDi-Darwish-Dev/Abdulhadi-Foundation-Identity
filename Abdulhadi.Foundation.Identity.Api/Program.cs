@@ -1,25 +1,47 @@
+using API.Extensions;
+using BuildingBlocks.Identity;
+using BuildingBlocks.Monitoring;
+using BuildingBlocks.Logging.Extensions;
+using Abdulhadi.Foundation.Identity.Application;
+using Abdulhadi.Foundation.Identity.Api.Extensions;
+using Abdulhadi.Foundation.Identity.Infrastructure;
+using Abdulhadi.Foundation.Identity.Infrastructure.Persistence;
+using Abdulhadi.Foundation.Identity.Infrastructure.Authentication.Jwt;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+builder.AddSharedLogging();
+builder.Services.AddMonitoring(builder.Configuration);
 
+builder.Services.AddCorsPolicy();
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddRateLimiting();
+builder.Services.AddAuthorization();
+builder.Services.AddHttpContextAccessor();
+
+builder.Services.AddAuthorizationPolicies();
+builder.Services.AddJwtAuthentication(builder.Configuration);
+
+builder.Services.AddExternalAuthentication(builder.Configuration);
+
+// Layers
+builder.Services
+    .AddApplication()
+    .AddInfrastructure(builder.Configuration)
+    .AddPersistence(builder.Configuration);
+
+// Swagger
+builder.Services.AddSwaggerDocumentation();
+
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerDocumentation();
 }
 
-app.UseHttpsRedirection();
-
-app.UseAuthorization();
-
-app.MapControllers();
+app.UsePresentation();
 
 app.Run();

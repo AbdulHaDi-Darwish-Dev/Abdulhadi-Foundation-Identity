@@ -7,18 +7,26 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.10">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="prometheus-net.AspNetCore" Version="8.2.1" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
   </ItemGroup>
 
   <ItemGroup>
     <Folder Include="Controllers\" />
-    <Folder Include="Extensions\" />
-    <Folder Include="Middleware\" />
-    <Folder Include="RateLimiting\" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\..\RESTful APIs\User Management\BuildingBlocks.Identity\BuildingBlocks.Identity.csproj" />
+    <ProjectReference Include="..\..\..\RESTful APIs\User Management\BuildingBlocks.Logging\BuildingBlocks.Logging.csproj" />
+    <ProjectReference Include="..\..\..\RESTful APIs\User Management\BuildingBlocks.Monitoring\BuildingBlocks.Monitoring.csproj" />
+    <ProjectReference Include="..\..\..\RESTful APIs\User Management\BuildingBlocks.Shared.Contracts\BuildingBlocks.Shared.Contracts.csproj" />
     <ProjectReference Include="..\..\..\RESTful APIs\User Management\BuildingBlocks.Shared.Core\BuildingBlocks.Shared.Core.csproj" />
+    <ProjectReference Include="..\Abdulhadi.Foundation.Identity.Application\Abdulhadi.Foundation.Identity.Application.csproj" />
+    <ProjectReference Include="..\Abdulhadi.Foundation.Identity.Infrastructure\Abdulhadi.Foundation.Identity.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,5 +1,6 @@
 <Solution>
   <Project Path="../../RESTful APIs/User Management/BuildingBlocks.Auditing/BuildingBlocks.Auditing.csproj" />
+  <Project Path="../../RESTful APIs/User Management/BuildingBlocks.Identity/BuildingBlocks.Identity.csproj" />
   <Project Path="../../RESTful APIs/User Management/BuildingBlocks.Logging/BuildingBlocks.Logging.csproj" />
   <Project Path="../../RESTful APIs/User Management/BuildingBlocks.Monitoring/BuildingBlocks.Monitoring.csproj" />
   <Project Path="../../RESTful APIs/User Management/BuildingBlocks.Shared.API/BuildingBlocks.Shared.API.csproj" />
