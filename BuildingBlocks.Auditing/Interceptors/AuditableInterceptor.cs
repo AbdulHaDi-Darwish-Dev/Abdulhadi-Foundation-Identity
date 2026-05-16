@@ -17,6 +17,19 @@ public class AuditableInterceptor : SaveChangesInterceptor
         _requestContext = requestContext;
     }
 
+    private static readonly HashSet<string> SensitiveProperties = new()
+    {
+        "PasswordHash",
+        "SecurityStamp",
+        "ConcurrencyStamp",
+        "NormalizedUserName",
+        "NormalizedEmail",
+        "TwoFactorEnabled",
+        "PhoneNumber",
+        "PhoneNumberConfirmed",
+        "EmailConfirmed"
+    };
+
     public override InterceptionResult<int> SavingChanges(DbContextEventData eventData, InterceptionResult<int> result)
     {
         OnBeforeSaveChanges(eventData.Context);
@@ -76,9 +89,14 @@ public class AuditableInterceptor : SaveChangesInterceptor
                 var entityType = entry.Entity.GetType();
                 var clrProperty = entityType.GetProperty(propertyName);
 
-                // فحص الحساسية باستخدام السمة [SensitiveData]
-                bool isSensitive = clrProperty != null &&
-                                   Attribute.IsDefined(clrProperty, typeof(SensitiveDataAttribute), true);
+                // فحص الحساسية باستخدام السمة [SensitiveData] and Blacklist
+
+                var isAttributeSensitive = clrProperty != null &&
+                    Attribute.IsDefined(clrProperty, typeof(SensitiveDataAttribute), true);
+
+                var isBlacklisted = SensitiveProperties.Contains(propertyName);
+
+                bool isSensitive = isAttributeSensitive || isBlacklisted;
 
                 object? oldVal = property.OriginalValue;
                 object? newVal = property.CurrentValue;
