@@ -15,9 +15,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\RESTful APIs\User Management\BuildingBlocks.Auditing\BuildingBlocks.Auditing.csproj" />
-    <ProjectReference Include="..\..\..\RESTful APIs\User Management\BuildingBlocks.Shared.Core\BuildingBlocks.Shared.Core.csproj" />
     <ProjectReference Include="..\Abdulhadi.Foundation.Identity.Domain\Abdulhadi.Foundation.Identity.Domain.csproj" />
+    <ProjectReference Include="..\BuildingBlocks.Auditing\BuildingBlocks.Auditing.csproj" />
+    <ProjectReference Include="..\BuildingBlocks.Logging\BuildingBlocks.Logging.csproj" />
   </ItemGroup>
 
 </Project>

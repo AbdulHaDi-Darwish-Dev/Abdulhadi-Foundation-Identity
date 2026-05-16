@@ -11,7 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\RESTful APIs\User Management\BuildingBlocks.Shared.Core\BuildingBlocks.Shared.Core.csproj" />
+    <ProjectReference Include="..\BuildingBlocks.Shared.Core\BuildingBlocks.Shared.Core.csproj" />
   </ItemGroup>
 
 </Project>

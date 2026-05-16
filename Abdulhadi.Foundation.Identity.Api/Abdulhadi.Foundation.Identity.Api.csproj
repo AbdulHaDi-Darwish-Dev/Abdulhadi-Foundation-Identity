@@ -20,13 +20,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\RESTful APIs\User Management\BuildingBlocks.Identity\BuildingBlocks.Identity.csproj" />
-    <ProjectReference Include="..\..\..\RESTful APIs\User Management\BuildingBlocks.Logging\BuildingBlocks.Logging.csproj" />
-    <ProjectReference Include="..\..\..\RESTful APIs\User Management\BuildingBlocks.Monitoring\BuildingBlocks.Monitoring.csproj" />
-    <ProjectReference Include="..\..\..\RESTful APIs\User Management\BuildingBlocks.Shared.Contracts\BuildingBlocks.Shared.Contracts.csproj" />
-    <ProjectReference Include="..\..\..\RESTful APIs\User Management\BuildingBlocks.Shared.Core\BuildingBlocks.Shared.Core.csproj" />
     <ProjectReference Include="..\Abdulhadi.Foundation.Identity.Application\Abdulhadi.Foundation.Identity.Application.csproj" />
     <ProjectReference Include="..\Abdulhadi.Foundation.Identity.Infrastructure\Abdulhadi.Foundation.Identity.Infrastructure.csproj" />
+    <ProjectReference Include="..\BuildingBlocks.Identity\BuildingBlocks.Identity.csproj" />
+    <ProjectReference Include="..\BuildingBlocks.Logging\BuildingBlocks.Logging.csproj" />
+    <ProjectReference Include="..\BuildingBlocks.Monitoring\BuildingBlocks.Monitoring.csproj" />
+    <ProjectReference Include="..\BuildingBlocks.Shared.Contracts\BuildingBlocks.Shared.Contracts.csproj" />
   </ItemGroup>
 
 </Project>
