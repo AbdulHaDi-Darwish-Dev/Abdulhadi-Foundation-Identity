@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
 
-namespace Abdulhadi.Foundation.Identity.Infrastructure.Entities;
+namespace Abdulhadi.Foundation.Identity.Domain.Entities;
 
 public class ApplicationUser : IdentityUser<Guid>
 {

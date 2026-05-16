@@ -11,6 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Abdulhadi.Foundation.Identity.Domain\Abdulhadi.Foundation.Identity.Domain.csproj" />
     <ProjectReference Include="..\BuildingBlocks.Shared.Core\BuildingBlocks.Shared.Core.csproj" />
   </ItemGroup>
 

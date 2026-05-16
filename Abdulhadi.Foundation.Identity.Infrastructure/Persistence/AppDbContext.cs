@@ -1,8 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using BuildingBlocks.Auditing.Model;
 using Microsoft.AspNetCore.Identity;
+using Abdulhadi.Foundation.Identity.Domain.Entities;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-using Abdulhadi.Foundation.Identity.Infrastructure.Entities;
 
 namespace Abdulhadi.Foundation.Identity.Infrastructure.Persistence;
 

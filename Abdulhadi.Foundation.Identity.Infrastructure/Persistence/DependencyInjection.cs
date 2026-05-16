@@ -4,7 +4,7 @@ using Microsoft.Extensions.Configuration;
 using BuildingBlocks.Logging.Abstractions;
 using BuildingBlocks.Auditing.Interceptors;
 using Microsoft.Extensions.DependencyInjection;
-using Abdulhadi.Foundation.Identity.Infrastructure.Entities;
+using Abdulhadi.Foundation.Identity.Domain.Entities;
 using Abdulhadi.Foundation.Identity.Application.Abstractions.Persistence;
 using Abdulhadi.Foundation.Identity.Infrastructure.Persistence.Repositories;
 
