@@ -14,6 +14,8 @@ public class ApplicationUser : IdentityUser<Guid>, IEntity
 
     public DateTime? DeletedAt { get; private set; }
 
+    public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
+
     private ApplicationUser() { }
 
     public static ApplicationUser Create(

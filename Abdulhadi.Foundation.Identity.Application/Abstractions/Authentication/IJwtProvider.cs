@@ -5,4 +5,6 @@ namespace Abdulhadi.Foundation.Identity.Application.Abstractions.Authentication;
 public interface IJwtProvider
 {
     Task<string> GenerateAccessTokenAsync(ApplicationUser user);
+
+    string GenerateRefreshToken();
 }

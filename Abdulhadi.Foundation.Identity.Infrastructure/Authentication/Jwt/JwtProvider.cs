@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using Microsoft.Extensions.Options;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
@@ -62,5 +63,12 @@ public sealed class JwtProvider : IJwtProvider
 
         return new JwtSecurityTokenHandler()
             .WriteToken(token);
+    }
+
+    public string GenerateRefreshToken()
+    {
+        var randomBytes = RandomNumberGenerator.GetBytes(64);
+
+        return Convert.ToBase64String(randomBytes);
     }
 }

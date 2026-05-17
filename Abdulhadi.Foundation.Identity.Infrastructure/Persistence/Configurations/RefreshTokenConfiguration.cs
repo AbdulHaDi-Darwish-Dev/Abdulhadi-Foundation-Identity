@@ -10,18 +10,30 @@ internal sealed class RefreshTokenConfiguration : IEntityTypeConfiguration<Refre
     {
         builder.ToTable("RefreshTokens");
 
-        builder.HasKey(r => r.Id);
+        builder.HasKey(x => x.Id);
 
-        builder.Property(r => r.Id).HasMaxLength(36).IsFixedLength();
+        builder.Property(x => x.Token)
+            .IsRequired()
+            .HasMaxLength(500);
 
-        builder.Property(r => r.UserId).HasMaxLength(36).IsFixedLength();
+        builder.HasIndex(x => x.Token)
+            .IsUnique();
 
-        builder.Property(t => t.Token).HasMaxLength(100);
+        builder.Property(x => x.CreatedAt)
+            .IsRequired();
 
-        builder.Property(t => t.IsRevoke).HasDefaultValue(false);
+        builder.Property(x => x.ExpiresAt)
+            .IsRequired();
 
-        builder.Property(t => t.RevokedAt);
+        builder.Property(x => x.RevokedAt);
 
-        builder.Property(t => t.ExpiresAt);
+        builder.Property(x => x.ReplacedByToken)
+            .HasMaxLength(500);
+
+        // Relationship
+        builder.HasOne(x => x.User)
+            .WithMany(x => x.RefreshTokens)
+            .HasForeignKey(x => x.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }
