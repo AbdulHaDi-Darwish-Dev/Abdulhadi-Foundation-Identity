@@ -8,37 +8,30 @@ namespace Abdulhadi.Foundation.Identity.Infrastructure.Authentication.Jwt;
 
 public static class JwtExtensions
 {
-    public static IServiceCollection AddJwtAuthentication(
-        this IServiceCollection services,
-        IConfiguration config)
+    public static IServiceCollection AddJwtAuthentication(this IServiceCollection services, IConfiguration config)
     {
-        var jwtOptions = config.GetSection("Jwt").Get<JwtOptions>();
-
-        var key = Encoding.UTF8.GetBytes(
-            Environment.GetEnvironmentVariable("JWT_KEY")!
-            );
-
-        services.AddAuthentication(options =>
+        services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
         {
-            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-        })
-        .AddJwtBearer(options =>
-        {
-            options.TokenValidationParameters = new TokenValidationParameters
-            {
-                ValidateIssuer = true,
-                ValidIssuer = jwtOptions.Issuer,
+            var jwtOptions = config
+                .GetSection(JwtOptions.SectionName)
+                .Get<JwtOptions>();
 
-                ValidateAudience = true,
-                ValidAudiences = jwtOptions.Audience,
+            options.TokenValidationParameters =
+                new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
 
-                ValidateIssuerSigningKey = true,
-                IssuerSigningKey = new SymmetricSecurityKey(key),
+                    ValidIssuer = jwtOptions!.Issuer,
+                    ValidAudience = jwtOptions.Audience,
 
-                ValidateLifetime = true,
-                ClockSkew = TimeSpan.Zero
-            };
+                    IssuerSigningKey =
+                        new SymmetricSecurityKey(
+                            Encoding.UTF8.GetBytes(
+                                jwtOptions.SecretKey))
+                };
         });
 
         return services;
