@@ -21,9 +21,9 @@ public static class FixedWindowPolicies
             config.QueueLimit = 0;
         });
 
-        options.AddFixedWindowLimiter(RateLimitPolicies.Register_3, config =>
+        options.AddFixedWindowLimiter(RateLimitPolicies.Register_5, config =>
         {
-            config.PermitLimit = 3;
+            config.PermitLimit = 5;
             config.Window = TimeSpan.FromHours(1);
             config.QueueLimit = 0;
         });

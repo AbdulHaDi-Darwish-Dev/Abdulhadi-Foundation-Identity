@@ -7,6 +7,6 @@ public static class RateLimitPolicies
     public const string ForgotPassword_3 = nameof(ForgotPassword_3);
     public const string Default_150 = nameof(Default_150);
     public const string General_40 = nameof(General_40);
-    public const string Register_3 = nameof(Register_3);
+    public const string Register_5 = nameof(Register_5);
     public const string PublicApi_60 = nameof(PublicApi_60);
 }

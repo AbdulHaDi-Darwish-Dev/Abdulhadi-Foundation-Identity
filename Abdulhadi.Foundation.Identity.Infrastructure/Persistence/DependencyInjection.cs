@@ -6,6 +6,7 @@ using BuildingBlocks.Auditing.Interceptors;
 using Microsoft.Extensions.DependencyInjection;
 using Abdulhadi.Foundation.Identity.Domain.Entities;
 using Abdulhadi.Foundation.Identity.Application.Abstractions.Persistence;
+using Abdulhadi.Foundation.Identity.Infrastructure.Persistence.UnitOfWork;
 using Abdulhadi.Foundation.Identity.Infrastructure.Persistence.Repositories;
 
 namespace Abdulhadi.Foundation.Identity.Infrastructure.Persistence;
@@ -54,6 +55,8 @@ public static class DependencyInjection
         .AddDefaultTokenProviders();
 
         services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+
+        services.AddScoped<IUnitOfWork, EfUnitOfWork>();
 
         return services;
     }

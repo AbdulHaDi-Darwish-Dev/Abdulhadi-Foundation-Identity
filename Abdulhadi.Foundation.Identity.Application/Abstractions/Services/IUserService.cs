@@ -5,5 +5,5 @@ namespace Abdulhadi.Foundation.Identity.Application.Abstractions.Services;
 
 public interface IUserService
 {
-    Task<OutputResult<bool>> RegisterAsync(RegisterRequest request);
+    Task<OutputResult<bool>> RegisterAsync(RegisterRequest request, bool isExternalUser = false);
 }

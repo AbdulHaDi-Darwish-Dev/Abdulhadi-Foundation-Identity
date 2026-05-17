@@ -9,6 +9,12 @@ public static class SpecificationEvaluator
     {
         var query = inputQuery;
 
+        // 👈 إذا كان الـ Specification يطلب إلغاء الفلاتر، نطبقها هنا فوراً
+        if (spec.IgnoreQueryFilters)
+        {
+            query = query.IgnoreQueryFilters();
+        }
+
         if (spec.Criteria != null)
             query = query.Where(spec.Criteria);
 

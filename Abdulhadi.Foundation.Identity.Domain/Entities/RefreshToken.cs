@@ -1,6 +1,8 @@
-﻿namespace Abdulhadi.Foundation.Identity.Domain.Entities;
+﻿using Abdulhadi.Foundation.Identity.Domain.Common;
 
-public class RefreshToken
+namespace Abdulhadi.Foundation.Identity.Domain.Entities;
+
+public class RefreshToken : IEntity
 {
     public Guid Id { get; set; }
 
