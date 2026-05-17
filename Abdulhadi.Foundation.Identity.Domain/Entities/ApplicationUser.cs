@@ -1,6 +1,6 @@
-﻿using Abdulhadi.Foundation.Identity.Domain.Common;
-using BuildingBlocks.Shared.Core;
+﻿using BuildingBlocks.Shared.Core;
 using Microsoft.AspNetCore.Identity;
+using Abdulhadi.Foundation.Identity.Domain.Common;
 
 namespace Abdulhadi.Foundation.Identity.Domain.Entities;
 
@@ -19,14 +19,10 @@ public class ApplicationUser : IdentityUser<Guid>, IEntity
     public static ApplicationUser Create(
         string email,
         string username,
-        string password,
         bool emailConfirmed)
     {
         if (string.IsNullOrWhiteSpace(username))
             throw new DomainException("Username is required.", ErrorCodes.InvalidInput);
-
-        if (string.IsNullOrWhiteSpace(password))
-            throw new DomainException("Password is required.", ErrorCodes.InvalidInput);
 
         if (string.IsNullOrWhiteSpace(email))
             throw new DomainException("Email is required.", ErrorCodes.InvalidInput);
@@ -39,9 +35,9 @@ public class ApplicationUser : IdentityUser<Guid>, IEntity
             Id = Guid.NewGuid(),
 
             UserName = username,
-            Email = email,
 
-            EmailConfirmed = false,
+            Email = email,
+            EmailConfirmed = emailConfirmed,
 
             IsActive = true,
             IsDeleted = false,
