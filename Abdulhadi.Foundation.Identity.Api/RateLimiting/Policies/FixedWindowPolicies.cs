@@ -7,13 +7,6 @@ public static class FixedWindowPolicies
 {
     public static void Configure(RateLimiterOptions options)
     {
-        options.AddFixedWindowLimiter(RateLimitPolicies.ConfirmEmail_3, config =>
-        {
-            config.PermitLimit = 3;
-            config.Window = TimeSpan.FromMinutes(10);
-            config.QueueLimit = 0;
-        });
-
         options.AddFixedWindowLimiter(RateLimitPolicies.Default_150, config =>
         {
             config.PermitLimit = 150;

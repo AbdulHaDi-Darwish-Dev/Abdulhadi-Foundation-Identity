@@ -36,4 +36,13 @@ public class AuthController : Controller
 
         return result.ToActionResult();
     }
+
+    [HttpPost("email/resend/otp")]
+    [EnableRateLimiting(RateLimitPolicies.ResendCode_2)]
+    public async Task<IActionResult> ResendVerificationByOtp([FromBody] ResendCodeRequest request)
+    {
+        var result = await _authService.ResendVerificationCodeAsync(request);
+
+        return result.ToActionResult();
+    }
 }

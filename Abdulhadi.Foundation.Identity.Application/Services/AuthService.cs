@@ -185,4 +185,49 @@ public sealed class AuthService : IAuthService
             return OutputResult<string>.Ok("Email confirmed successfully.");
         });
     }
+
+    public async Task<OutputResult<string>> ResendVerificationCodeAsync(ResendCodeRequest request)
+    {
+        return await BaseHandler.HandleWithErrorHandlingAsync(request, "ResendVerificationCode", _logger, async c =>
+        {
+            _logger.LogInformation("Resend verification code code started for email: {Email}", c.Email);
+
+            // 1. البحث عن المستخدم 
+            var user = await _userManager.FindByEmailAsync(c.Email);
+
+            if (user is null)
+            {
+                // أمنياً: لا نخبر المخترق هل الإيميل موجود أم لا، نرجع رسالة عامة أو نログ الفشل
+                _logger.LogWarning("Resend code failed: User with email {Email} not found.", c.Email);
+
+                return OutputResult<string>.Fail("User not found or invalid request.", ErrorCodes.NotFound);
+            }
+
+            // 2. التحقق مما إذا كان الحساب مفعلاً بالفعل
+            if (user.EmailConfirmed)
+            {
+                _logger.LogInformation("Resend code skipped: Email is already confirmed for user {UserId}.", user.Id);
+
+                return OutputResult<string>.Fail("Email is already confirmed.", ErrorCodes.VerificationFailed);
+            }
+
+            // 3. التحقق مما إذا كان الحساب معطلاً من الإدارة
+            if (!user.IsActive)
+            {
+                _logger.LogWarning("Resend code rejected: Account is disabled for user {UserId}.", user.Id);
+
+                return OutputResult<string>.Fail("Account is disabled.", ErrorCodes.Forbidden);
+            }
+
+            // 4. إرسال كود جديد 
+            // الـ SecurityCodeService تتكفل بالـ Rate Limiting (دقيقتين) والـ Hashing والتخزين تلقائياً
+            _logger.LogInformation("Sending new OTP verification code to user {UserId}...", user.Id);
+
+            await _securityCodeService.SendOtpAsync(user, OtpType.EmailVerification);
+
+            _logger.LogInformation("New OTP verification code sent successfully to user {UserId}.", user.Id);
+
+            return OutputResult<string>.Ok("A new verification code has been sent to your email.");
+        });
+    }
 }

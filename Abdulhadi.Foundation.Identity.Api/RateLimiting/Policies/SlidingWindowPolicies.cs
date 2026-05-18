@@ -21,6 +21,32 @@ public static class SlidingWindowPolicies
             });
 
         options.AddSlidingWindowLimiter(
+            RateLimitPolicies.ConfirmEmail_3,
+            config =>
+            {
+                config.PermitLimit = 3;
+
+                config.Window = TimeSpan.FromMinutes(10);
+
+                config.SegmentsPerWindow = 6;
+
+                config.QueueLimit = 0;
+            });
+
+        options.AddSlidingWindowLimiter(
+            RateLimitPolicies.ResendCode_2,
+            config =>
+            {
+                config.PermitLimit = 2;
+
+                config.Window = TimeSpan.FromMinutes(10);
+
+                config.SegmentsPerWindow = 6;
+
+                config.QueueLimit = 0;
+            });
+
+        options.AddSlidingWindowLimiter(
             RateLimitPolicies.RefreshToken_10,
             config =>
             {

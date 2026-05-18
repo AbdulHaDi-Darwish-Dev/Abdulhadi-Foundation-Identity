@@ -3,6 +3,7 @@
 public enum OtpType
 {
     EmailVerification,
+    ResendCode,
     DeleteAccount,
     EmailChange
 }
