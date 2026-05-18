@@ -3,6 +3,7 @@
 public static class RateLimitPolicies
 {
     public const string Login_5 = nameof(Login_5);
+    public const string ConfirmEmail_3 = nameof(ConfirmEmail_3);
     public const string RefreshToken_10 = nameof(RefreshToken_10);
     public const string ForgotPassword_3 = nameof(ForgotPassword_3);
     public const string Default_150 = nameof(Default_150);

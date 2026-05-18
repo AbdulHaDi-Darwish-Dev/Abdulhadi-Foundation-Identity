@@ -134,4 +134,55 @@ public sealed class AuthService : IAuthService
             });
         });
     }
+
+    public async Task<OutputResult<string>> ConfirmEmailAsync(ConfirmEmailRequest request)
+    {
+        return await BaseHandler.HandleWithErrorHandlingAsync(request, "ConfirmEmail", _logger, async c =>
+        {
+            _logger.LogInformation("Confirm email attempt started for email: {Email}", c.Email);
+
+            // 1. جلب المستخدم من قاعدة البيانات
+            var user = await _userManager.FindByEmailAsync(c.Email);
+            if (user is null)
+            {
+                _logger.LogWarning("Confirm email failed: User with email {Email} not found.", c.Email);
+
+                return OutputResult<string>.Fail("User not found.", ErrorCodes.NotFound);
+            }
+
+            // 2. إذا كان البريد مؤكداً بالفعل، لا داعي لإعادة العملية
+            if (user.EmailConfirmed)
+            {
+                _logger.LogInformation("Confirm email skipped: Email already confirmed for user {UserId}.", user.Id);
+
+                return OutputResult<string>.Ok("Email is already confirmed.");
+            }
+
+            // 3. التحقق من الـ OTP عبر الـ SecurityCodeService
+            var isValidOtp = await _securityCodeService.VerifyOtpAsync(c.Email, c.Code, OtpType.EmailVerification);
+
+            if (!isValidOtp)
+            {
+                _logger.LogWarning("Confirm email failed: Invalid or expired OTP code for user {UserId}.", user.Id);
+
+                return OutputResult<string>.Fail("Invalid or expired verification code.", ErrorCodes.VerificationFailed);
+            }
+
+            // 5. تحديث حالة تأكيد الإيميل في قاعدة البيانات عبر Identity
+            user.ConfirmEmail();
+
+            var updateResult = await _userManager.UpdateAsync(user);
+
+            if (!updateResult.Succeeded)
+            {
+                _logger.LogError("Confirm email failed: Unable to update user confirmation status in database for user {UserId}.", user.Id);
+
+                return OutputResult<string>.Fail("An error occurred while confirming your email.");
+            }
+
+            _logger.LogInformation("Email successfully confirmed for user {UserId}.", user.Id);
+
+            return OutputResult<string>.Ok("Email confirmed successfully.");
+        });
+    }
 }

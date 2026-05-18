@@ -39,11 +39,6 @@ public class SecurityCodeService : ISecurityCodeService
         // 🔐 Generate OTP
         var otp = await _otpService.GenerateAsync(otpKey, TimeSpan.FromMinutes(10));
 
-        await _cache.SetAsync(
-            otpKey,
-            new OtpData(otp),
-            TimeSpan.FromMinutes(10));
-
         // 📩 Send email
         await _email.SendVerificationOtpAsync(user.Email, otp);
     }

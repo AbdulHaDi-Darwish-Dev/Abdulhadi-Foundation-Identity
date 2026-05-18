@@ -19,11 +19,20 @@ public class AuthController : Controller
         _authService = authService;
     }
 
-    [HttpPost]
+    [HttpPost("login")]
     [EnableRateLimiting(RateLimitPolicies.Login_5)]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
         var result = await _authService.LoginAsync(request);
+
+        return result.ToActionResult();
+    }
+
+    [HttpPost("email/verify/otp")]
+    [EnableRateLimiting(RateLimitPolicies.ConfirmEmail_3)]
+    public async Task<IActionResult> VerifyEmailByOtp([FromBody] ConfirmEmailRequest request)
+    {
+        var result = await _authService.ConfirmEmailAsync(request);
 
         return result.ToActionResult();
     }

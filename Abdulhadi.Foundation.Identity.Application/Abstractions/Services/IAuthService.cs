@@ -8,4 +8,6 @@ namespace Abdulhadi.Foundation.Identity.Application.Abstractions.Services;
 public interface IAuthService
 {
     Task<OutputResult<AuthResponse>> LoginAsync(LoginRequest request);
+
+    Task<OutputResult<string>> ConfirmEmailAsync(ConfirmEmailRequest request);
 }
