@@ -3,5 +3,5 @@
 public interface IOtpService
 {
     Task<string> GenerateAsync(string key, TimeSpan expiry);
-    Task<bool> VerifyAsync<T>(string key, string code);
+    Task<bool> VerifyAsync(string key, string code);
 }

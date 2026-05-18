@@ -15,25 +15,22 @@ public static class DependencyInjection
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration config)
     {
         services.AddMemoryCache();
-
         services.AddScoped<ICacheService, MemoryCacheService>();
 
-        services.Configure<ResendClientOptions>(option =>
+        // 🟢 الحل الصحيح: إعداد مكتبة Resend وتمرير الـ ApiKey بشكل صريح
+        services.AddResend(options =>
         {
-            option.ApiToken = config["Resend:ApiKey"]!;
+            options.ApiToken = config["Resend:ApiKey"]!;
         });
 
-        services.AddHttpClient<IResend, ResendClient>();
+        // ربط الإعدادات بكلاس الـ ResendOptions الخاص بك لقراءة الـ FromEmail
+        services.Configure<ResendOptions>(config.GetSection("Resend"));
 
         services.AddScoped<IJwtProvider, JwtProvider>();
-
         services.AddScoped<IEmailService, ResendEmailService>();
-
         services.AddScoped<ISecurityCodeService, SecurityCodeService>();
 
-        services.Configure<JwtOptions>(
-            config.GetSection(JwtOptions.SectionName));
-
+        services.Configure<JwtOptions>(config.GetSection(JwtOptions.SectionName));
 
         return services;
     }

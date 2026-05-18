@@ -1,4 +1,4 @@
-﻿using System.Security.Cryptography;
+﻿using BuildingBlocks.Shared.Core;
 using Abdulhadi.Foundation.Identity.Domain.Enums;
 using Abdulhadi.Foundation.Identity.Domain.Entities;
 using Abdulhadi.Foundation.Identity.Application.Security.OTP;
@@ -9,12 +9,16 @@ namespace Abdulhadi.Foundation.Identity.Infrastructure.Services;
 public class SecurityCodeService : ISecurityCodeService
 {
     private readonly ICacheService _cache;
+
     private readonly IEmailService _email;
 
-    public SecurityCodeService(ICacheService cache, IEmailService email)
+    private readonly IOtpService _otpService;
+
+    public SecurityCodeService(ICacheService cache, IEmailService email, IOtpService otpService)
     {
         _cache = cache;
         _email = email;
+        _otpService = otpService;
     }
 
     public async Task SendOtpAsync(ApplicationUser user, OtpType type)
@@ -28,12 +32,12 @@ public class SecurityCodeService : ISecurityCodeService
         var isBlocked = await _cache.GetAsync<bool?>(rateKey);
 
         if (isBlocked == true)
-            throw new Exception("Too many requests");
+            throw new InfrastructureException("Too many requests", ErrorCodes.TooManyRequests);
 
         await _cache.SetAsync(rateKey, true, TimeSpan.FromMinutes(2));
 
         // 🔐 Generate OTP
-        var otp = GenerateOtp();
+        var otp = await _otpService.GenerateAsync(otpKey, TimeSpan.FromMinutes(10));
 
         await _cache.SetAsync(
             otpKey,
@@ -41,7 +45,7 @@ public class SecurityCodeService : ISecurityCodeService
             TimeSpan.FromMinutes(10));
 
         // 📩 Send email
-        await _email.SendVerificationOtpAsync(email, otp);
+        await _email.SendVerificationOtpAsync(user.Email, otp);
     }
 
     public async Task<bool> VerifyOtpAsync(string email, string code, OtpType type)
@@ -50,25 +54,6 @@ public class SecurityCodeService : ISecurityCodeService
 
         var key = CacheKeys.Otp(type, email);
 
-        var stored = await _cache.GetAsync<OtpData>(key);
-
-        if (stored is null)
-            return false;
-
-        if (stored.Code != code)
-            return false;
-
-        await _cache.RemoveAsync(key);
-
-        return true;
-    }
- 
-    private string GenerateOtp()
-    {
-        var bytes = new byte[4];
-        RandomNumberGenerator.Fill(bytes);
-
-        var value = BitConverter.ToUInt32(bytes, 0) % 900000 + 100000;
-        return value.ToString();
+        return await _otpService.VerifyAsync(key, code);
     }
 }

@@ -7,22 +7,23 @@ using Abdulhadi.Foundation.Identity.Application.Abstractions.Services;
 
 namespace Abdulhadi.Foundation.Identity.Api.Controllers;
 
-[ApiController]
-[Route("api/v1/users")]
-public class UsersController : Controller
-{
-    private readonly IUserService _userService;
 
-    public UsersController(IUserService userService)
+[ApiController]
+[Route("api/v1/auth")]
+public class AuthController : Controller
+{
+    private readonly IAuthService _authService;
+
+    public AuthController(IAuthService authService)
     {
-        _userService = userService;
+        _authService = authService;
     }
 
     [HttpPost]
-    [EnableRateLimiting(RateLimitPolicies.Register_5)]
-    public async Task<IActionResult> Register([FromBody] RegisterRequest request)
+    [EnableRateLimiting(RateLimitPolicies.Login_5)]
+    public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
-        var result = await _userService.RegisterAsync(request, isExternalUser: false);
+        var result = await _authService.LoginAsync(request);
 
         return result.ToActionResult();
     }
