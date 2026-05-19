@@ -1,6 +1,4 @@
-﻿using BuildingBlocks.Shared.Core;
-using Abdulhadi.Foundation.Identity.Domain.Common;
-using Abdulhadi.Foundation.Identity.Application.Abstractions.Persistence;
+﻿using Abdulhadi.Foundation.Identity.Application.Abstractions.Persistence;
 using Abdulhadi.Foundation.Identity.Infrastructure.Persistence.Repositories;
 
 namespace Abdulhadi.Foundation.Identity.Infrastructure.Persistence.UnitOfWork;
@@ -18,7 +16,7 @@ public class EfUnitOfWork : IUnitOfWork
 
     public IRepository<TEntity> Repository<TEntity>() where TEntity : class
     {
-        var type = typeof(TEntity).Name;
+        var type = typeof(TEntity).FullName;
 
         if (!_repositories.ContainsKey(type))
         {
@@ -29,17 +27,6 @@ public class EfUnitOfWork : IUnitOfWork
         return (IRepository<TEntity>)_repositories[type]!;
     }
 
-    public async Task<OutputResult<bool>> CommitAsync()
-    {
-        try
-        {
-            await _context.SaveChangesAsync();
-
-            return OutputResult<bool>.Ok(true);
-        }
-        catch (Exception ex)
-        {
-            throw new PersistenceException(ex.Message);
-        }
-    }
+    public async Task SaveChangesAsync()
+        => await _context.SaveChangesAsync();
 }

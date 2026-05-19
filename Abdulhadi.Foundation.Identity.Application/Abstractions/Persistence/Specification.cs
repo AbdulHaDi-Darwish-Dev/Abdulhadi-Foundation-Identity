@@ -4,6 +4,8 @@ namespace Abdulhadi.Foundation.Identity.Application.Abstractions.Persistence;
 
 public abstract class Specification<T> : ISpecification<T> where T : class
 {
+    public bool AsTracking { get; protected set; } = false;
+
     public bool IgnoreQueryFilters { get; protected set; } = false; // 👈 افتراضياً لا يلغي الفلاتر
 
     public Expression<Func<T, bool>>? Criteria { get; protected set; }

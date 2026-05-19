@@ -15,6 +15,9 @@ public static class SpecificationEvaluator
             query = query.IgnoreQueryFilters();
         }
 
+        if (spec.AsTracking)
+            query = query.AsTracking();
+
         if (spec.Criteria != null)
             query = query.Where(spec.Criteria);
 

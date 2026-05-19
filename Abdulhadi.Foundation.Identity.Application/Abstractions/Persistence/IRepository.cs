@@ -8,6 +8,8 @@ public interface IRepository<T> where T : class
 
     void Update(T entity);
 
+    void RemoveRange(IEnumerable<T> entities);
+
     Task AddAsync(T entity, CancellationToken cancellationToken = default);
 
     Task<T?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);

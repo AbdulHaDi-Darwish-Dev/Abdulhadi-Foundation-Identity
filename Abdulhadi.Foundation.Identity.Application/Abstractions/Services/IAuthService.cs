@@ -11,4 +11,6 @@ public interface IAuthService
     Task<OutputResult<string>> ConfirmEmailAsync(ConfirmEmailRequest request);
 
     Task<OutputResult<string>> ResendVerificationCodeAsync(ResendCodeRequest request);
+
+    Task<OutputResult<RefreshTokenResponse>> RefreshTokenAsync(RefreshTokenRequest request);
 }

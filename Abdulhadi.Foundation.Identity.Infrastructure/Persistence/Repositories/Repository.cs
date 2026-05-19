@@ -17,6 +17,9 @@ public class Repository<T> : IRepository<T> where T : class
     public void Remove(T entity)
         => _context.Set<T>().Remove(entity);
 
+    public void RemoveRange(IEnumerable<T> entities)
+        => _context.Set<T>().RemoveRange(entities);
+
     public void Update(T entity)
         => _context.Set<T>().Update(entity);
 
@@ -24,7 +27,7 @@ public class Repository<T> : IRepository<T> where T : class
         => await _context.Set<T>().AddAsync(entity, cancellationToken);
 
     public async Task<T?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
-        => await _context.Set<T>().FindAsync(id, cancellationToken);
+        => await _context.Set<T>().FindAsync(new object[] { id }, cancellationToken);
 
     public async Task<int> CountAsync(ISpecification<T> spec, CancellationToken cancellationToken = default)
         => await SpecificationEvaluator.GetQuery(_context.Set<T>(), spec).CountAsync(cancellationToken);

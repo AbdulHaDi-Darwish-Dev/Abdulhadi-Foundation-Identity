@@ -1,6 +1,6 @@
 ﻿using System.Text;
 using System.Security.Claims;
-using System.Security.Cryptography;
+using BuildingBlocks.Shared.Core;
 using Microsoft.Extensions.Options;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
@@ -65,10 +65,52 @@ public sealed class JwtProvider : IJwtProvider
             .WriteToken(token);
     }
 
-    public string GenerateRefreshToken()
+    public ClaimsPrincipal? GetPrincipalFromExpiredToken(string token)
     {
-        var randomBytes = RandomNumberGenerator.GetBytes(64);
+        var tokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateAudience = true,
+            ValidateIssuer = true,
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_options.SecretKey)),
+            ValidateLifetime = false, // 🛑 هذه هي النقطة السحرية: نتجاهل كون التوكن منتهي الصلاحية لقراءة الـ Claims منه
+            ValidIssuer = _options.Issuer,
+            ValidAudience = _options.Audience
+        };
 
-        return Convert.ToBase64String(randomBytes);
+        var tokenHandler = new JwtSecurityTokenHandler();
+
+        try
+        {
+            var principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out SecurityToken securityToken);
+
+            // التأكد من أن التوكن مشفر بخوارزمية الـ JWT الصحيحة (مثلاً HmacSha256) لمنع هجمات التلاعب
+            if (securityToken is not JwtSecurityToken jwtSecurityToken ||
+                !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
+            {
+                return null;
+            }
+
+            return principal;
+        }
+
+        catch
+        {
+            return null; // إذا كان التوكن تالفاً أو غير صحيح نهائياً
+        }
+    }
+
+    public (string RawToken, RefreshToken RefreshToken) CreateRefreshToken(Guid userId)
+    {
+        // 1. توليد التوكن الصريح الآمن (الذي سيرسل للمستخدم)
+        var rawToken = CryptoHelper.GenerateSecureRandomString();
+
+        // 2. تحويل التوكن الصريح إلى هاش فوراً لحفظه بأمان
+        var hashedToken = CryptoHelper.HashText(rawToken);
+
+        // 3. إنشاء كائن الـ RefreshToken بالهاش المشفر ليُحفظ في الداتابيز
+        var refreshToken = RefreshToken.Create(userId, hashedToken, expiryDays: 7);
+
+        return (rawToken, refreshToken);
     }
 }

@@ -1,5 +1,7 @@
-﻿using BuildingBlocks.Shared.Core;
+﻿using System.Security.Claims;
+using BuildingBlocks.Shared.Core;
 using Microsoft.Extensions.Logging;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using Abdulhadi.Foundation.Identity.Domain.Enums;
 using Abdulhadi.Foundation.Identity.Domain.Entities;
@@ -7,13 +9,17 @@ using Abdulhadi.Foundation.Identity.Application.Security.OTP;
 using Abdulhadi.Foundation.Identity.Application.DTOs.Request;
 using Abdulhadi.Foundation.Identity.Application.DTOs.Response;
 using Abdulhadi.Foundation.Identity.Application.Abstractions.Services;
+using Abdulhadi.Foundation.Identity.Application.Abstractions.Persistence;
 using Abdulhadi.Foundation.Identity.Application.Abstractions.Authentication;
 using Abdulhadi.Foundation.Identity.Application.Common.ErrorsAndExceptionsHandler;
+using Abdulhadi.Foundation.Identity.Application.Features.RefreshTokens.Specifications;
 
 namespace Abdulhadi.Foundation.Identity.Application.Services;
 
 public sealed class AuthService : IAuthService
 {
+    private readonly IUnitOfWork _unitOfWork;
+
     private readonly IJwtProvider _jwtProvider;
 
     private readonly ILogger<AuthService> _logger;
@@ -25,6 +31,7 @@ public sealed class AuthService : IAuthService
     private readonly SignInManager<ApplicationUser> _signInManager;
 
     public AuthService(
+        IUnitOfWork unitOfWork,
         IJwtProvider jwtProvider,
         ILogger<AuthService> logger,
         ISecurityCodeService securityCodeService,
@@ -32,6 +39,7 @@ public sealed class AuthService : IAuthService
         SignInManager<ApplicationUser> signInManager)
     {
         _logger = logger;
+        _unitOfWork = unitOfWork;
         _jwtProvider = jwtProvider;
         _userManager = userManager;
         _signInManager = signInManager;
@@ -44,9 +52,10 @@ public sealed class AuthService : IAuthService
         {
             _logger.LogInformation("Login attempt started for identifier: {Identifier}", c.Identifier);
 
-            // 1. محاولة البحث بالإيميل أولاً
-            var user = await _userManager.FindByEmailAsync(c.Identifier)
-                        ?? await _userManager.FindByNameAsync(c.Identifier); // إن لم يجد، يبحث بالـ Username
+            // 1. جلب المستخدم
+            var user = await _userManager.Users
+                .Include(u => u.RefreshTokens)
+                .FirstOrDefaultAsync(u => u.Email == c.Identifier || u.UserName == c.Identifier);
 
             if (user is null)
             {
@@ -55,42 +64,51 @@ public sealed class AuthService : IAuthService
                 return OutputResult<AuthResponse>.Fail("Invalid credentials", ErrorCodes.InvalidCredentials);
             }
 
-            // 2. الفحص أولاً: هل الحساب مقفل حالياً بناءً على الـ 5 دقائق التي حددتها؟
+            // 2. التحقق من القفل
             if (await _userManager.IsLockedOutAsync(user))
             {
                 _logger.LogWarning("Login rejected: Account is locked out for user {UserId}.", user.Id);
 
-                return OutputResult<AuthResponse>.Fail("Account is temporarily locked. Please try again later.", ErrorCodes.Forbidden);
+                return OutputResult<AuthResponse>.Fail(
+                    "Account is temporarily locked. Please try again later.",
+                    ErrorCodes.Forbidden);
             }
 
+            // 3. التحقق من الحالة
             if (!user.IsActive)
             {
                 _logger.LogWarning("Login rejected: Account is disabled for user {UserId}.", user.Id);
 
-                return OutputResult<AuthResponse>.Fail("Account is disabled. Please contact support.", ErrorCodes.Forbidden);
+                return OutputResult<AuthResponse>.Fail(
+                    "Account is disabled. Please contact support.",
+                    ErrorCodes.Forbidden);
             }
 
-            // 3. التحقق من كلمة المرور وتفعيل عداد المحاولات (lockoutOnFailure: true)
-            // هنا سيقوم النظام تلقائياً بقراءة الـ MaxFailedAccessAttempts = 5 التي وضعتها في الـ Program.cs
-            var result = await _signInManager.CheckPasswordSignInAsync(user, c.Password, lockoutOnFailure: true);
+            // 4. التحقق من كلمة المرور
+            var result = await _signInManager.CheckPasswordSignInAsync(
+                user,
+                c.Password,
+                lockoutOnFailure: true);
 
             if (result.IsLockedOut)
             {
-                _logger.LogWarning(
-                    "Login failed: User {UserId} reached 5 failed attempts and is now locked out for 5 minutes.",
-                    user.Id);
+                _logger.LogWarning("Login failed: User {UserId} is locked out.", user.Id);
 
-                return OutputResult<AuthResponse>.Fail("Account is temporarily locked due to multiple failed attempts.", ErrorCodes.Forbidden);
+                return OutputResult<AuthResponse>.Fail(
+                    "Account is temporarily locked due to multiple failed attempts.",
+                    ErrorCodes.Forbidden);
             }
 
             if (!result.Succeeded)
             {
                 _logger.LogWarning("Login failed: Incorrect password for user {UserId}.", user.Id);
 
-                return OutputResult<AuthResponse>.Fail("Invalid credentials", ErrorCodes.InvalidCredentials);
+                return OutputResult<AuthResponse>.Fail(
+                    "Invalid credentials",
+                    ErrorCodes.InvalidCredentials);
             }
 
-            // 4. التحقق من تفعيل البريد (حسب منطق البزنس الخاص بك)
+            // 5. التحقق من البريد
             if (!user.EmailConfirmed)
             {
                 _logger.LogInformation("Login suspended: Email verification required for user {UserId}.", user.Id);
@@ -106,31 +124,27 @@ public sealed class AuthService : IAuthService
 
             _logger.LogInformation("Credentials verified. Generating tokens for user {UserId}...", user.Id);
 
-            // Access Token & Refresh Token Generation
+            // 6. توليد التوكنز
             var accessToken = await _jwtProvider.GenerateAccessTokenAsync(user);
+            var refreshToken = _jwtProvider.CreateRefreshToken(user.Id);
 
-            var refreshTokenValue = _jwtProvider.GenerateRefreshToken();
-            var refreshToken = RefreshToken.Create(user.Id, refreshTokenValue, expiryDays: 7);
+            // 7. حفظ Refresh Token عبر Repository + UnitOfWork فقط
+            var refreshTokenRepo = _unitOfWork.Repository<RefreshToken>();
 
-            user.RefreshTokens.Add(refreshToken);
+            await refreshTokenRepo.AddAsync(refreshToken.RefreshToken);
 
-            var updateResult = await _userManager.UpdateAsync(user);
-            if (!updateResult.Succeeded)
-            {
-                _logger.LogError("Login failed: Unable to update user tokens for user {UserId}.", user.Id);
-
-                return OutputResult<AuthResponse>.Fail("An error occurred during login processing.");
-            }
+            await _unitOfWork.SaveChangesAsync();
 
             _logger.LogInformation("User {UserId} successfully logged in.", user.Id);
 
+            // 8. الاستجابة
             return OutputResult<AuthResponse>.Ok(new AuthResponse
             {
                 AccessToken = accessToken,
                 AccessTokenExpiresAt = DateTime.UtcNow.AddMinutes(15),
 
-                RefreshToken = refreshToken.Token,
-                RefreshTokenExpiresAt = refreshToken.ExpiresAt,
+                RefreshToken = refreshToken.RawToken,
+                RefreshTokenExpiresAt = refreshToken.RefreshToken.ExpiresAt
             });
         });
     }
@@ -228,6 +242,111 @@ public sealed class AuthService : IAuthService
             _logger.LogInformation("New OTP verification code sent successfully to user {UserId}.", user.Id);
 
             return OutputResult<string>.Ok("A new verification code has been sent to your email.");
+        });
+    }
+
+    public async Task<OutputResult<RefreshTokenResponse>> RefreshTokenAsync(RefreshTokenRequest request)
+    {
+        return await BaseHandler.HandleWithErrorHandlingAsync(request, "RefreshToken", _logger, async c =>
+        {
+            _logger.LogInformation("Refresh token attempt started.");
+
+            // 1. استخراج الـ Claims من Access Token
+            var principal = _jwtProvider.GetPrincipalFromExpiredToken(c.AccessToken);
+
+            if (principal is null)
+            {
+                _logger.LogWarning("Refresh token failed: Invalid access token.");
+                return OutputResult<RefreshTokenResponse>.Fail("Invalid tokens.", ErrorCodes.ValidationError);
+            }
+
+            // 2. استخراج UserId
+            var userIdClaim = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (!Guid.TryParse(userIdClaim, out var userId))
+            {
+                _logger.LogWarning("Refresh token failed: Invalid user id claim.");
+
+                return OutputResult<RefreshTokenResponse>.Fail("Invalid tokens.", ErrorCodes.ValidationError);
+            }
+
+            // 3. جلب المستخدم فقط للتحقق من الحالة
+            var user = await _userManager.Users
+                .FirstOrDefaultAsync(u => u.Id == userId);
+
+            if (user is null || !user.IsActive)
+            {
+                _logger.LogWarning("Refresh token failed: User not found or inactive.");
+
+                return OutputResult<RefreshTokenResponse>.Fail("User unavailable.", ErrorCodes.NotFound);
+            }
+
+            // 4. البحث عن refresh token في Repository (بدل navigation)
+            var refreshTokenRepo = _unitOfWork.Repository<RefreshToken>();
+
+            var incomingTokenHash = CryptoHelper.HashText(c.RefreshToken);
+
+            var existingToken = await refreshTokenRepo
+                .FirstOrDefaultAsync(new TokenByValueSpec(incomingTokenHash));
+
+            if (existingToken is null || existingToken.UserId != userId)
+            {
+                _logger.LogWarning("Refresh token failed: Token invalid for user {UserId}.", userId);
+
+                return OutputResult<RefreshTokenResponse>.Fail("Invalid refresh token.", ErrorCodes.ValidationError);
+            }
+
+            // 5. التحقق من الصلاحية
+            if (!existingToken.IsActive)
+            {
+                _logger.LogWarning("Refresh token failed: Token expired or revoked.");
+
+                // 🔥 Security: revoke all tokens for this user
+                var allTokens = await refreshTokenRepo
+                    .ListAsync(new TokenByUserIdSpec(userId));
+
+                foreach (var token in allTokens)
+                    token.Revoke();
+
+                await _unitOfWork.SaveChangesAsync();
+
+                return OutputResult<RefreshTokenResponse>.Fail(
+                    "Session expired. Please login again.",
+                    ErrorCodes.Unauthorized);
+            }
+
+            _logger.LogInformation("Refreshing tokens for user {UserId}...", userId);
+
+            // 6. revoke old token
+            existingToken.Revoke();
+
+            // 7. generate new tokens
+            var newAccessToken = await _jwtProvider.GenerateAccessTokenAsync(user);
+            var newRefreshToken = _jwtProvider.CreateRefreshToken(userId);
+
+            await refreshTokenRepo.AddAsync(newRefreshToken.RefreshToken);
+
+            // 8. cleanup expired tokens (optional)
+            var expiredTokens = await refreshTokenRepo
+                .ListAsync(new TokenExpiredByUserIdSpec(userId));
+
+            _logger.LogInformation("Number of expired tokens found: {Count}", expiredTokens.Count);
+
+            refreshTokenRepo.RemoveRange(expiredTokens);
+
+            // 9. commit everything
+            await _unitOfWork.SaveChangesAsync();
+
+            _logger.LogInformation("Tokens rotated successfully for user {UserId}.", userId);
+
+            return OutputResult<RefreshTokenResponse>.Ok(new RefreshTokenResponse
+            {
+                AccessToken = newAccessToken,
+                AccessTokenExpiresAt = DateTime.UtcNow.AddMinutes(15),
+
+                RefreshToken = newRefreshToken.RawToken,
+                RefreshTokenExpiresAt = newRefreshToken.RefreshToken.ExpiresAt
+            });
         });
     }
 }

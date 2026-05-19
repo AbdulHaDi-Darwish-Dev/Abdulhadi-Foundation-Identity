@@ -19,6 +19,7 @@
         public const string TokenRevoked = "TOKEN_REVOKED";
         public const string TokenNotFound = "TOKEN_NOT_FOUND";
 
+
         // 📦 Resource State
         public const string InactiveResource = "INACTIVE_RESOURCE";
 
