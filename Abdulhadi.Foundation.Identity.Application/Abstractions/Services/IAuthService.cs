@@ -6,6 +6,10 @@ namespace Abdulhadi.Foundation.Identity.Application.Abstractions.Services;
 
 public interface IAuthService
 {
+    Task<OutputResult<bool>> LogoutAsync(LogoutRequest request);
+
+    Task<OutputResult<bool>> LogoutFromAllDevicesAsync(Guid userId);
+
     Task<OutputResult<AuthResponse>> LoginAsync(LoginRequest request);
 
     Task<OutputResult<string>> ConfirmEmailAsync(ConfirmEmailRequest request);

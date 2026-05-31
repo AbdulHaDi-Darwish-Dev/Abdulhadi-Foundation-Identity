@@ -1,9 +1,10 @@
-﻿using System.Text;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http; // 👈 تأكد من وجود هذا
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
+using System.Security.Claims;
+using System.Text;
 
 namespace Abdulhadi.Foundation.Identity.Infrastructure.Authentication.Jwt;
 
@@ -32,7 +33,7 @@ public static class JwtExtensions
                 ValidateIssuerSigningKey = true,
                 ValidIssuer = jwtOptions!.Issuer,
                 ValidAudience = jwtOptions.Audience,
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions.SecretKey))
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions.SecretKey)),
             };
 
             // 🎯 كسر الـ Redirect وإرجاع 401 صريحة في حال فشل الـ JWT

@@ -46,6 +46,48 @@ public sealed class AuthService : IAuthService
         _securityCodeService = securityCodeService;
     }
 
+    public async Task<OutputResult<bool>> LogoutAsync(LogoutRequest request)
+    {
+        return await BaseHandler.HandleWithErrorHandlingAsync(request, "Logout", _logger, async c =>
+        {
+            _logger.LogInformation("Logout attempt started.");
+
+            if (string.IsNullOrEmpty(c.RefreshToken))
+            {
+                _logger.LogWarning("Logout failed: Refresh token is null or empty.");
+                return OutputResult<bool>.Fail("Refresh token is required.", ErrorCodes.ValidationError);
+            }
+
+            // 1. حساب الـ Hash للتوكن القادمة للبحث عنها بأمان
+            var incomingTokenHash = CryptoHelper.HashText(c.RefreshToken);
+            var refreshTokenRepo = _unitOfWork.Repository<RefreshToken>();
+
+            // 2. البحث عن التوكن الفعالة باستخدام الـ Specification Pattern الخاص بك
+            var existingToken = await refreshTokenRepo
+                .FirstOrDefaultAsync(new TokenByValueSpec(incomingTokenHash));
+
+            // إذا لم توجد التوكن أو كانت ملغية/منتهية بالفعل، نرجع نجاح (Idempotent Logout) أو خطأ حسب رغبتك
+            if (existingToken is null || !existingToken.IsActive)
+            {
+                _logger.LogWarning("Logout: Token not found, or already inactive.");
+
+                return OutputResult<bool>.Fail("Invalid or expired token.", ErrorCodes.ValidationError);
+            }
+
+            _logger.LogInformation("Revoking token for user {UserId}...", existingToken.UserId);
+
+            // 3. عمل Revoke للتوكن الحالية (باستخدام الميثود الموجودة داخل الـ Entity لديك)
+            existingToken.Revoke();
+
+            // 4. حفظ التغييرات في قاعدة البيانات
+            await _unitOfWork.SaveChangesAsync();
+
+            _logger.LogInformation("Successfully logged out and revoked token for user {UserId}.", existingToken.UserId);
+
+            return OutputResult<bool>.Ok(true);
+        });
+    }
+
     public async Task<OutputResult<AuthResponse>> LoginAsync(LoginRequest request)
     {
         return await BaseHandler.HandleWithErrorHandlingAsync(request, "Login", _logger, async c =>
@@ -242,6 +284,38 @@ public sealed class AuthService : IAuthService
             _logger.LogInformation("New OTP verification code sent successfully to user {UserId}.", user.Id);
 
             return OutputResult<string>.Ok("A new verification code has been sent to your email.");
+        });
+    }
+
+    public async Task<OutputResult<bool>> LogoutFromAllDevicesAsync(Guid userId)
+    {
+        return await BaseHandler.HandleWithErrorHandlingAsync(userId, "LogoutFromAllDevices", _logger, async c =>
+        {
+            _logger.LogInformation("Logout from all devices attempt started.");
+
+            var refreshTokenRepo = _unitOfWork.Repository<RefreshToken>();
+
+            // 1. جلب جميع الـ Refresh Tokens المرتبطة بهذا المستخدم بالـ Specification
+            var allUserTokens = await refreshTokenRepo
+                .ListAsync(new TokenByUserIdSpec(userId));
+
+            if (allUserTokens is null || !allUserTokens.Any())
+            {
+                _logger.LogInformation("No active tokens found to delete for user {UserId}.", userId);
+                return OutputResult<bool>.Ok(true);
+            }
+
+            _logger.LogInformation("Removing {Count} tokens to log out user {UserId} from all devices...", allUserTokens.Count, userId);
+
+            // 2. حذف جميع السجلات نهائياً بناءً على طلبك (Hard Delete)
+            refreshTokenRepo.RemoveRange(allUserTokens);
+
+            // 3. حفظ التغييرات قطعيّاً
+            await _unitOfWork.SaveChangesAsync();
+
+            _logger.LogInformation("All sessions cleared successfully for user {UserId}.", userId);
+
+            return OutputResult<bool>.Ok(true);
         });
     }
 
