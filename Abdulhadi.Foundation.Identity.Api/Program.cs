@@ -16,7 +16,6 @@ builder.Services.AddMonitoring(builder.Configuration);
 builder.Services.AddCorsPolicy();
 builder.Services.AddControllers();
 builder.Services.AddRateLimiting();
-builder.Services.AddAuthorization();
 builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddAuthorizationPolicies();

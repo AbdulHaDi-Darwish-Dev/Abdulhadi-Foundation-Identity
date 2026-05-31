@@ -6,7 +6,7 @@ public static class AuthorizationExtensions
     {
         services.AddAuthorization(options =>
         {
-        });
+        }); 
 
         return services;
     }

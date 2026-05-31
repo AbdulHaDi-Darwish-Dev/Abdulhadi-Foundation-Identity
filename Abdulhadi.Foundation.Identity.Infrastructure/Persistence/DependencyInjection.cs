@@ -36,7 +36,7 @@ public static class DependencyInjection
             }
         });
 
-        services.AddIdentity<ApplicationUser, IdentityRole<Guid>>(options =>
+        services.AddIdentityCore<ApplicationUser>(options =>
         {
             options.Password.RequiredLength = 8;
             options.Password.RequireDigit = true;
@@ -51,8 +51,10 @@ public static class DependencyInjection
 
             options.SignIn.RequireConfirmedEmail = false;
         })
+        .AddRoles<IdentityRole<Guid>>()
         .AddEntityFrameworkStores<AppDbContext>()
-        .AddDefaultTokenProviders();
+        .AddDefaultTokenProviders()
+        .AddSignInManager();
 
         services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 

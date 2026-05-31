@@ -31,11 +31,15 @@ public static class LoggingExtensions
         return builder;
     }
 
-    public static IApplicationBuilder UseSharedLogging(this IApplicationBuilder app)
+    // نستخدم هذا في أول الـ Pipeline
+    public static IApplicationBuilder UseCorrelationId(this IApplicationBuilder app)
     {
-        app.UseMiddleware<CorrelationMiddleware>();
-        app.UseMiddleware<RequestEnrichmentMiddleware>();
+        return app.UseMiddleware<CorrelationMiddleware>();
+    }
 
-        return app;
+    // نستخدم هذا بعد الـ Authentication
+    public static IApplicationBuilder UseLoggingEnrichment(this IApplicationBuilder app)
+    {
+        return app.UseMiddleware<RequestEnrichmentMiddleware>();
     }
 }

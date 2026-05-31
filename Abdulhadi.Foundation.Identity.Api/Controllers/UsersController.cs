@@ -9,7 +9,7 @@ namespace Abdulhadi.Foundation.Identity.Api.Controllers;
 
 [ApiController]
 [Route("api/v1/users")]
-public class UsersController : Controller
+public class UsersController : ControllerBase
 {
     private readonly IUserService _userService;
 

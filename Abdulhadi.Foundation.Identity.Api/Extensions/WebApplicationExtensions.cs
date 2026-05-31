@@ -7,20 +7,23 @@ public static class WebApplicationExtensions
 {
     public static WebApplication UsePresentation(this WebApplication app)
     {
+        // توليد الـ Correlation ID للطلب في البداية
+        app.UseCorrelationId();
+
         app.UseHttpsRedirection();
-
         app.UseCorsPolicy();
-
-        app.UseSecurity();
-
-        app.UseSharedLogging(); // 🔥 أول شيء (Correlation + Context)
-        app.UseMiddleware<RequestLoggingMiddleware>(); // 🔥 بعده مباشرة
-
         app.UseRateLimiting();
 
+        // التعرف على المستخدم
+        app.UseSecurity();
+
+        // إثراء الـ Logs بالـ User والـ Correlation وكتابة الـ Log
+        app.UseLoggingEnrichment();
+        app.UseMiddleware<RequestLoggingMiddleware>();
+
+        // الـ Endpoints
         app.MapHealthChecks("/health");
         app.MapPrometheusScrapingEndpoint("/metrics");
-
         app.MapControllers();
 
         return app;

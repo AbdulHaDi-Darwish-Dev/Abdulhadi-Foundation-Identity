@@ -1,17 +1,17 @@
-﻿using Abdulhadi.Foundation.Identity.Api.RateLimiting.Constants;
-using Abdulhadi.Foundation.Identity.Application.Abstractions.Services;
-using Abdulhadi.Foundation.Identity.Application.DTOs.Request;
+﻿using Microsoft.AspNetCore.Mvc;
 using BuildingBlocks.Shared.API;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.AspNetCore.Authorization;
+using Abdulhadi.Foundation.Identity.Application.DTOs.Request;
+using Abdulhadi.Foundation.Identity.Api.RateLimiting.Constants;
+using Abdulhadi.Foundation.Identity.Application.Abstractions.Services;
 
 namespace Abdulhadi.Foundation.Identity.Api.Controllers;
 
 
 [ApiController]
 [Route("api/v1/auth")]
-public class AuthController : Controller
+public class AuthController : ControllerBase
 {
     private readonly IAuthService _authService;
 
@@ -30,6 +30,7 @@ public class AuthController : Controller
     }
 
     [HttpPost("refresh-token")]
+    [Authorize]
     [EnableRateLimiting(RateLimitPolicies.RefreshToken_10)]
     public async Task<IActionResult> Refresh([FromBody] RefreshTokenRequest request)
     {
